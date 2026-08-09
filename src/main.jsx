@@ -4,7 +4,7 @@ import Globe from 'react-globe.gl';
 import './styles.css';
 
 const GEO_URL = 'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson';
-const API_URL = 'https://restcountries.com/v3.1/alpha/';
+const API_URL = 'https://restcountries.com/v3.1/name/';
 
 function formatNumber(value) {
   return typeof value === 'number' ? new Intl.NumberFormat('en-US').format(value) : '—';
@@ -43,6 +43,7 @@ function CountryPanel({ country, loading, onClose }) {
 
 function App() {
   const globeRef = useRef();
+  const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [countries, setCountries] = useState([]);
   const [selected, setSelected] = useState(null);
   const [countryFacts, setCountryFacts] = useState(null);
@@ -50,7 +51,16 @@ function App() {
   const [hovered, setHovered] = useState(null);
 
   useEffect(() => {
-    fetch(GEO_URL).then((r) => r.json()).then((data) => setCountries(data.features || [])).catch(console.error);
+    const onResize = () => setSize({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    fetch(GEO_URL)
+      .then((r) => { if (!r.ok) throw new Error('World map failed to load'); return r.json(); })
+      .then((data) => setCountries(data.features || []))
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -85,8 +95,8 @@ function App() {
       <div className="globe-wrap">
         <Globe
           ref={globeRef}
-          width={window.innerWidth}
-          height={window.innerHeight}
+          width={size.width}
+          height={size.height}
           backgroundColor="rgba(0,0,0,0)"
           globeImageUrl="https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
           bumpImageUrl="https://unpkg.com/three-globe/example/img/earth-topology.png"
