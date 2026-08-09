@@ -4,7 +4,45 @@ import Globe from 'react-globe.gl';
 import './styles.css';
 
 const GEO_URL = 'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson';
-const API_URL = 'https://restcountries.com/v3.1/name/';
+const COUNTRIES_URL = 'https://restcountries.com/v3.1/all?fields=name,capital,region,subregion,population,area,languages,currencies,flags,maps,cca3,altSpellings';
+
+function normalizeName(value = '') {
+  return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+function findCountryFact(geoName, countries) {
+  const target = normalizeName(geoName);
+  const aliases = {
+    [normalizeName('United States of America')]: 'United States',
+    [normalizeName('USA')]: 'United States',
+    [normalizeName('Russia')]: 'Russian Federation',
+    [normalizeName('South Korea')]: 'Korea (Republic of)',
+    [normalizeName('North Korea')]: "Korea (Democratic People's Republic of)",
+    [normalizeName('Czechia')]: 'Czech Republic',
+    [normalizeName('Czech Republic')]: 'Czechia',
+    [normalizeName('Ivory Coast')]: "Côte d'Ivoire",
+    [normalizeName('Cape Verde')]: 'Cabo Verde',
+    [normalizeName('Eswatini')]: 'Eswatini',
+    [normalizeName('Turkey')]: 'Türkiye',
+    [normalizeName('Laos')]: "Lao People's Democratic Republic",
+    [normalizeName('Moldova')]: 'Moldova',
+    [normalizeName('Venezuela')]: 'Venezuela',
+    [normalizeName('Bolivia')]: 'Bolivia'
+  };
+
+  const direct = countries.find((c) => {
+    const names = [c.name?.common, c.name?.official, c.cca3, ...(c.altSpellings || [])];
+    return names.some((name) => normalizeName(name) === target);
+  });
+  if (direct) return direct;
+
+  const aliasTarget = aliases[target];
+  if (aliasTarget) {
+    const alias = normalizeName(aliasTarget);
+    return countries.find((c) => [c.name?.common, c.name?.official, ...(c.altSpellings || [])].some((name) => normalizeName(name) === alias));
+  }
+  return null;
+}
 
 function formatNumber(value) {
   return typeof value === 'number' ? new Intl.NumberFormat('en-US').format(value) : '—';
@@ -45,10 +83,11 @@ function App() {
   const globeRef = useRef();
   const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [countries, setCountries] = useState([]);
-  const [selected, setSelected] = useState(null);
   const [countryFacts, setCountryFacts] = useState(null);
+  const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
   const [hovered, setHovered] = useState(null);
+  const [dataError, setDataError] = useState(false);
 
   useEffect(() => {
     const onResize = () => setSize({ width: window.innerWidth, height: window.innerHeight });
@@ -57,22 +96,24 @@ function App() {
   }, []);
 
   useEffect(() => {
-    fetch(GEO_URL)
-      .then((r) => { if (!r.ok) throw new Error('World map failed to load'); return r.json(); })
-      .then((data) => setCountries(data.features || []))
-      .catch(console.error);
+    Promise.all([
+      fetch(GEO_URL).then((r) => { if (!r.ok) throw new Error('World map failed'); return r.json(); }),
+      fetch(COUNTRIES_URL).then((r) => { if (!r.ok) throw new Error('Country data failed'); return r.json(); })
+    ])
+      .then(([geo, facts]) => { setCountries(geo.features || []); setCountryFactsData(facts); })
+      .catch((error) => { console.error(error); setDataError(true); });
   }, []);
+
+  const [countryFactsData, setCountryFactsData] = useState([]);
 
   useEffect(() => {
     if (!selected) return;
-    setLoading(true); setCountryFacts(null);
-    const name = selected.properties?.name;
-    fetch(`${API_URL}${encodeURIComponent(name)}`)
-      .then((r) => { if (!r.ok) throw new Error('Country not found'); return r.json(); })
-      .then((data) => setCountryFacts(data[0]))
-      .catch(() => setCountryFacts({ name: { common: name, official: 'Facts unavailable for this country' } }))
-      .finally(() => setLoading(false));
-  }, [selected]);
+    setLoading(true);
+    const geoName = selected.properties?.name;
+    const fact = findCountryFact(geoName, countryFactsData);
+    setCountryFacts(fact || { name: { common: geoName, official: 'Country facts could not be matched' } });
+    setLoading(false);
+  }, [selected, countryFactsData]);
 
   const polygons = useMemo(() => countries.map((feature) => ({ ...feature, __id: feature.properties?.name })), [countries]);
 
@@ -120,7 +161,7 @@ function App() {
       </div>
       <div className="controls-hint"><span>✦</span> Drag to rotate <i /> Scroll to zoom <i /> Click a country</div>
       <CountryPanel country={countryFacts} loading={loading} onClose={() => { setSelected(null); setCountryFacts(null); }} />
-      <div className="status"><span className="pulse" /> {countries.length ? `${countries.length} countries ready to explore` : 'Loading world map…'}</div>
+      <div className="status"><span className="pulse" /> {dataError ? 'Country data unavailable' : countries.length ? `${countries.length} countries ready to explore` : 'Loading world map…'}</div>
     </main>
   );
 }
