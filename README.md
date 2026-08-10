@@ -1,25 +1,27 @@
 # 🌍 3D Earth Explorer
 
-An interactive 3D globe for exploring the world one country at a time. Drag to rotate, scroll to zoom, hover to highlight a country, and click a country to inspect its facts.
+An interactive 3D globe for exploring the world one country at a time. Rotate the Earth, search for a country, fly to it, inspect live facts, and compare countries side by side.
 
 ## ✨ Features
 
 - Realistic Earth texture with terrain bump mapping
 - Day and Night Earth modes
-- Space / night-sky background
-- Atmospheric glow around the planet
-- Gentle automatic globe rotation
+- Space / night-sky background and atmospheric glow
+- Smooth automatic rotation with pause/resume control
 - Country borders with hover and selected-state highlighting
-- Country fact panel with flag, capital, region, population, area, languages, currency, country code, and time zones
-- Google Maps link for selected countries when available
-- Country-name matching with aliases for common GeoJSON naming differences
-- Session caching for country facts to reduce repeated API requests
-- Responsive desktop and mobile UI
+- Smooth camera focus when a country is selected
+- Country search with flag, region, keyboard Enter/Escape support, and instant selection
+- Country fact panel with flag, capital, region, population, area, languages, currency, country code, time zones, TLD, and Google Maps
+- Country-name matching and aliases for common GeoJSON naming differences
+- Browser-session caching for country facts
+- Fallback country-specific API lookup when a GeoJSON name does not match directly
+- Side-by-side comparison for up to two countries
+- Responsive desktop and mobile layouts
 - Reset view control
 
 ## 🛠️ Tech stack
 
-- React
+- React 19
 - Vite
 - react-globe.gl
 - Three.js
@@ -42,14 +44,14 @@ npm run build
 npm run preview
 ```
 
+## 🌐 Deployment
+
+The repository includes a GitHub Actions workflow for GitHub Pages. The Vite base path is configured for `/3dearth/`.
+
 ## Data sources
 
 Country geometry is loaded from the public world GeoJSON dataset used by the D3 Graph Gallery. Country facts are loaded from REST Countries. The application caches the country list in the browser session and falls back to a country-specific request when a GeoJSON name does not match directly.
 
 ## Roadmap
 
-- Country search
-- Smarter camera focus when selecting a country
-- More detailed country information
-- Country comparison
-- Further visual polish and performance improvements
+The original core roadmap is now implemented. Future improvements can focus on richer visual effects, additional geography data, performance tuning, accessibility, and optional features such as historical country data.
