@@ -48,6 +48,10 @@ npm run preview
 
 The repository includes a GitHub Actions workflow for GitHub Pages. The Vite base path is configured for `/3dearth/`.
 
+## 📌 Project status
+
+The main globe-exploration features are implemented and the project is ready for continued polish. Future work can focus on performance, accessibility, richer geography data, and additional country-history features.
+
 ## Data sources
 
 Country geometry is loaded from the public world GeoJSON dataset used by the D3 Graph Gallery. Country facts are loaded from REST Countries. The application caches the country list in the browser session and falls back to a country-specific request when a GeoJSON name does not match directly.
