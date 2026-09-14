@@ -97,7 +97,7 @@ function App() {
   const searchResults = useMemo(() => { const q = normalizeName(search.trim()); if (!q) return []; return factsData.filter((c) => namesOf(c).some((n) => normalizeName(n).includes(q))).slice(0, 7); }, [search, factsData]);
   const selectFeature = (feature) => { setSelected(feature); setSearch(''); setSearchOpen(false); focusCountry(globeRef.current, feature); setAutoRotate(false); };
   const selectSearchResult = (country) => { const polygon = countries.find((f) => findCountryFact(f.properties?.name, [country])); const fallback = countries.find((f) => normalizeName(f.properties?.name) === normalizeName(country.name?.common)); if (polygon || fallback) selectFeature(polygon || fallback); };
-  const reset = () => { globeRef.current?.pointOfView({ lat: 20, lng: 10, altitude: 2.45 }, 1000); setSelected(null); setFacts(null); setFactsError(false); setSearch(''); setSearchOpen(false); setAutoRotate(true); };
+  const reset = () => { globeRef.current?.pointOfView({ lat: 20, lng: 10, altitude: 2.45 }, 1000); setSelected(null); setFacts(null); setFactsError(false); setSearch(''); setSearchOpen(false); setAutoRotate(false); };
   const addComparison = (country) => { setComparison((prev) => prev.some((c) => c.cca3 === country.cca3) || prev.length >= 2 ? prev : [...prev, country]); setComparisonOpen(true); };
   const removeComparison = (country) => setComparison((prev) => prev.filter((c) => c.cca3 !== country.cca3));
 
